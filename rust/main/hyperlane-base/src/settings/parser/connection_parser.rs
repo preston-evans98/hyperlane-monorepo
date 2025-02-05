@@ -526,5 +526,11 @@ pub fn build_connection_conf(
         HyperlaneDomainProtocol::CosmosNative => {
             build_cosmos_native_connection_conf(rpcs, chain, err, operation_batch)
         }
+        HyperlaneDomainProtocol::Sovereign => rpcs.iter().next().map(|url| {
+            ChainConnectionConf::Sovereign(h_sovereign::ConnectionConf {
+                url: url.clone(),
+                operation_batch,
+            })
+        }),
     }
 }

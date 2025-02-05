@@ -7,6 +7,7 @@ use ethers::prelude::Selector;
 use eyre::{eyre, Context, Report, Result};
 use serde_json::Value;
 
+use tracing::info;
 use ethers_prometheus::middleware::{ContractInfo, PrometheusMiddlewareConf};
 use hyperlane_core::{
     config::OpSubmissionConfig, AggregationIsm, CcipReadIsm, ChainResult, ContractLocator,
@@ -31,6 +32,7 @@ use hyperlane_fuel as h_fuel;
 use hyperlane_sealevel::{
     self as h_sealevel, fallback::SealevelFallbackRpcClient, SealevelProvider, TransactionSubmitter,
 };
+use hyperlane_sovereign as h_sovereign;
 
 use crate::{
     metrics::AgentMetricsConf,
@@ -169,6 +171,8 @@ pub enum ChainConnectionConf {
     Cosmos(h_cosmos::ConnectionConf),
     /// Cosmos native configuration
     CosmosNative(h_cosmos_native::ConnectionConf),
+    /// Sovereign configuration.
+    Sovereign(h_sovereign::ConnectionConf),
 }
 
 impl ChainConnectionConf {
@@ -180,6 +184,7 @@ impl ChainConnectionConf {
             Self::Sealevel(_) => HyperlaneDomainProtocol::Sealevel,
             Self::Cosmos(_) => HyperlaneDomainProtocol::Cosmos,
             Self::CosmosNative(_) => HyperlaneDomainProtocol::CosmosNative,
+            Self::Sovereign(_) => HyperlaneDomainProtocol::Sovereign,
         }
     }
 
@@ -189,6 +194,7 @@ impl ChainConnectionConf {
             Self::Ethereum(conf) => Some(&conf.op_submission_config),
             Self::Cosmos(conf) => Some(&conf.op_submission_config),
             Self::Sealevel(conf) => Some(&conf.op_submission_config),
+            Self::Sovereign(conf) => Some(&conf.op_submission_config),
             _ => None,
         }
     }
@@ -292,6 +298,11 @@ impl ChainConf {
                 let provider = build_cosmos_native_provider(self, conf, metrics, &locator, None)?;
                 Ok(Box::new(provider) as Box<dyn HyperlaneProvider>)
             }
+            ChainConnectionConf::Sovereign(conf) => {
+                let provider =
+                    h_sovereign::SovereignProvider::new(locator.domain.clone(), conf, None).await;
+                Ok(Box::new(provider) as Box<dyn HyperlaneProvider>)
+            }
         }
         .context(ctx)
     }
@@ -346,6 +357,14 @@ impl ChainConf {
                     .map(|m| Box::new(m) as Box<dyn Mailbox>)
                     .map_err(Into::into)
             }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("Build Sov mailbox {:?}", conf);
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                h_sovereign::SovereignMailbox::new(conf, locator, signer)
+                    .await
+                    .map(|m| Box::new(m) as Box<dyn Mailbox>)
+                    .map_err(Into::into)
+            }
         }
         .context(ctx)
     }
@@ -388,6 +407,17 @@ impl ChainConf {
                 let hook =
                     h_cosmos_native::CosmosNativeMerkleTreeHook::new(provider, locator.clone())?;
 
+                Ok(Box::new(hook) as Box<dyn MerkleTreeHook>)
+            }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("Build Sov merkle_tree_hook");
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let hook = h_sovereign::SovereignMerkleTreeHook::new(
+                    &conf.clone(),
+                    locator.clone(),
+                    signer,
+                )
+                .await?;
                 Ok(Box::new(hook) as Box<dyn MerkleTreeHook>)
             }
         }
@@ -463,6 +493,18 @@ impl ChainConf {
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
             }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!(
+                    "build_message_indexer(&self, metrics: &CoreMetrics) {:?}",
+                    conf
+                );
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let indexer = Box::new(
+                    h_sovereign::SovereignMailboxIndexer::new(conf.clone(), locator, signer)
+                        .await?,
+                );
+                Ok(indexer as Box<dyn SequenceAwareIndexer<HyperlaneMessage>>)
+            }
         }
         .context(ctx)
     }
@@ -526,6 +568,7 @@ impl ChainConf {
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<H256>>)
             }
+            ChainConnectionConf::Sovereign(_conf) => todo!(),
         }
         .context(ctx)
     }
@@ -574,6 +617,17 @@ impl ChainConf {
                     provider, conf, locator,
                 )?);
                 Ok(indexer as Box<dyn InterchainGasPaymaster>)
+            }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("Build Sov IGP");
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let igp = h_sovereign::SovereignInterchainGasPaymaster::new(
+                    &conf.clone(),
+                    locator.clone(),
+                    signer,
+                )
+                .await?;
+                Ok(Box::new(igp) as Box<dyn InterchainGasPaymaster>)
             }
         }
         .context(ctx)
@@ -639,6 +693,14 @@ impl ChainConf {
                     conf,
                     locator,
                 )?);
+                Ok(indexer as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
+            }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("build_interchain_gas_payment_indexer( &self, metrics: &CoreMetrics)");
+                let indexer = Box::new(
+                    h_sovereign::SovereignInterchainGasPaymasterIndexer::new(conf.clone(), locator)
+                        .await?,
+                );
                 Ok(indexer as Box<dyn SequenceAwareIndexer<InterchainGasPayment>>)
             }
         }
@@ -713,6 +775,16 @@ impl ChainConf {
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<MerkleTreeInsertion>>)
             }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("build_merkle_tree_hook_indexer(&self, metrics: &CoreMetrics)");
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let indexer = Box::new(
+                    h_sovereign::SovereignMerkleTreeHookIndexer::new(conf.clone(), locator, signer)
+                        .await?,
+                );
+
+                Ok(indexer as Box<dyn SequenceAwareIndexer<MerkleTreeInsertion>>)
+            }
         }
         .context(ctx)
     }
@@ -757,6 +829,14 @@ impl ChainConf {
                     locator.clone(),
                 )?);
 
+                Ok(va as Box<dyn ValidatorAnnounce>)
+            }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("Build Sov validator");
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let va = Box::new(
+                    h_sovereign::SovereignValidatorAnnounce::new(conf, locator, signer).await,
+                );
                 Ok(va as Box<dyn ValidatorAnnounce>)
             }
         }
@@ -809,6 +889,17 @@ impl ChainConf {
                 let ism = Box::new(h_cosmos_native::CosmosNativeIsm::new(provider, locator)?);
                 Ok(ism as Box<dyn InterchainSecurityModule>)
             }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("Build Sov ISM");
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let ism = h_sovereign::SovereignInterchainSecurityModule::new(
+                    &conf.clone(),
+                    locator.clone(),
+                    signer,
+                )
+                .await?;
+                Ok(Box::new(ism) as Box<dyn InterchainSecurityModule>)
+            }
         }
         .context(ctx)
     }
@@ -853,6 +944,13 @@ impl ChainConf {
                     Box::new(h_cosmos_native::CosmosNativeIsm::new(provider, locator)?);
                 Ok(ism as Box<dyn MultisigIsm>)
             }
+            ChainConnectionConf::Sovereign(conf) => {
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let multisign_ism =
+                    h_sovereign::SovereignMultisigIsm::new(&conf.clone(), locator.clone(), signer)
+                        .await?;
+                Ok(Box::new(multisign_ism) as Box<dyn MultisigIsm>)
+            }
         }
         .context(ctx)
     }
@@ -890,6 +988,14 @@ impl ChainConf {
                 let ism: Box<hyperlane_cosmos_native::CosmosNativeIsm> =
                     Box::new(h_cosmos_native::CosmosNativeIsm::new(provider, locator)?);
                 Ok(ism as Box<dyn RoutingIsm>)
+            }
+            ChainConnectionConf::Sovereign(conf) => {
+                info!("Build Sov R-ISM");
+                let signer = self.sovereign_signer().await.context(ctx)?;
+                let routing_ism =
+                    h_sovereign::SovereignRoutingIsm::new(&conf.clone(), locator.clone(), signer)
+                        .await?;
+                Ok(Box::new(routing_ism) as Box<dyn RoutingIsm>)
             }
         }
         .context(ctx)
@@ -929,6 +1035,7 @@ impl ChainConf {
             ChainConnectionConf::CosmosNative(_) => {
                 Err(eyre!("Cosmos Native does not support aggregation ISM yet")).context(ctx)
             }
+            ChainConnectionConf::Sovereign(_conf) => todo!(),
         }
         .context(ctx)
     }
@@ -960,6 +1067,7 @@ impl ChainConf {
             ChainConnectionConf::CosmosNative(_) => {
                 Err(eyre!("Cosmos Native does not support CCIP read ISM yet")).context(ctx)
             }
+            ChainConnectionConf::Sovereign(_conf) => todo!(),
         }
         .context(ctx)
     }
@@ -987,6 +1095,9 @@ impl ChainConf {
                 ChainConnectionConf::CosmosNative(_) => {
                     Box::new(conf.build::<h_cosmos_native::Signer>().await?)
                 }
+                ChainConnectionConf::Sovereign(_) => {
+                    Box::new(conf.build::<h_sovereign::Signer>().await?)
+                }
             };
             Ok(Some(chain_signer))
         } else {
@@ -1013,6 +1124,10 @@ impl ChainConf {
     }
 
     async fn cosmos_native_signer(&self) -> Result<Option<h_cosmos_native::Signer>> {
+        self.signer().await
+    }
+    
+    async fn sovereign_signer(&self) -> Result<Option<h_sovereign::Signer>> {
         self.signer().await
     }
 

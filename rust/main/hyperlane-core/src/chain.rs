@@ -280,6 +280,8 @@ pub enum HyperlaneDomainProtocol {
     Cosmos,
     /// A Cosmos based chain with uses a module instead of a contract.
     CosmosNative,
+    /// A Sovereign-based chain type which uses hyperlane-sovereign.
+    Sovereign,
 }
 
 impl HyperlaneDomainProtocol {
@@ -600,7 +602,7 @@ impl HyperlaneDomain {
         use HyperlaneDomainProtocol::*;
         let protocol = self.domain_protocol();
         many_to_one!(match protocol {
-            IndexMode::Block: [Ethereum, Cosmos, CosmosNative],
+            IndexMode::Block: [Ethereum, Cosmos, CosmosNative, Sovereign],
             IndexMode::Sequence : [Sealevel, Fuel],
         })
     }
