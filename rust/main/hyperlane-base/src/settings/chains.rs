@@ -300,7 +300,7 @@ impl ChainConf {
             }
             ChainConnectionConf::Sovereign(conf) => {
                 let provider =
-                    h_sovereign::SovereignProvider::new(locator.domain.clone(), conf, None).await;
+                    h_sovereign::SovereignProvider::new(locator.domain.clone(), conf, None).await?;
                 Ok(Box::new(provider) as Box<dyn HyperlaneProvider>)
             }
         }
@@ -835,7 +835,7 @@ impl ChainConf {
                 info!("Build Sov validator");
                 let signer = self.sovereign_signer().await.context(ctx)?;
                 let va = Box::new(
-                    h_sovereign::SovereignValidatorAnnounce::new(conf, locator, signer).await,
+                    h_sovereign::SovereignValidatorAnnounce::new(conf, locator, signer).await?,
                 );
                 Ok(va as Box<dyn ValidatorAnnounce>)
             }
