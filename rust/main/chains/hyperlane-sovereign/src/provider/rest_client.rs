@@ -102,7 +102,7 @@ fn try_h512_to_h256(input: H512) -> ChainResult<H256> {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct SovereignRestClient {
+pub struct SovereignRestClient {
     url: Url,
     client: Client,
     universal_wallet_client: UniversalClient,
@@ -132,6 +132,14 @@ pub struct Batch {
     pub hash: String,
     pub txs: Vec<Tx>,
     pub slot_number: u64,
+}
+
+/// A Sovereign Rest response payload.
+#[derive(Clone, Debug, Deserialize)]
+pub struct Slot {
+    pub number: u64,
+    pub hash: String,
+    pub batches: Vec<Batch>,
 }
 trait HttpClient {
     async fn http_get(&self, query: &str) -> Result<Bytes, reqwest::Error>;
@@ -215,61 +223,76 @@ impl SovereignRestClient {
         })
     }
 
-    pub async fn get_values_from_key(&self, key: &str) -> ChainResult<String> {
-        #[derive(Clone, Debug, Deserialize)]
-        struct Data {
-            _key: Option<String>,
-            value: Option<Vec<String>>,
-        }
-
-        // /modules/accounts/state/credential-ids/items/{key}
-        let query = format!("/modules/accounts/state/credential-ids/items/{key}");
-
-        let response = self
-            .http_get(&query)
-            .await
-            .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-        let response: Schema<Data> = serde_json::from_slice(&response)?;
-
-        let response = response.data.clone().and_then(|d| d.value).ok_or_else(|| {
-            ChainCommunicationError::CustomError(String::from("Data contained None"))
-        })?;
-
-        if response.is_empty() {
-            Err(ChainCommunicationError::CustomError(String::from(
-                "Received empty list",
-            )))
-        } else {
-            Ok(response
-                .first()
-                .ok_or(ChainCommunicationError::CustomError(String::from(
-                    "Failed to get first item",
-                )))?
-                .clone())
-        }
+    /// Create a new Rest client for the Sovereign Hyperlane chain.
+    pub async fn new_with_key(
+        conf: &ConnectionConf,
+        domain: u32,
+        key_bytes: [u8; 32],
+    ) -> ChainResult<Self> {
+        let universal_wallet_client =
+            utils::get_universal_client_with_key(conf.url.as_str(), domain, key_bytes).await?;
+        Ok(SovereignRestClient {
+            url: conf.url.clone(),
+            client: Client::new(),
+            universal_wallet_client,
+        })
     }
 
-    pub async fn get_nonce(&self, key: &str) -> ChainResult<u32> {
-        #[derive(Clone, Debug, Deserialize)]
-        struct Data {
-            _key: Option<String>,
-            value: Option<u32>,
-        }
+    // pub async fn get_values_from_key(&self, key: &str) -> ChainResult<String> {
+    //     #[derive(Clone, Debug, Deserialize)]
+    //     struct Data {
+    //         _key: Option<String>,
+    //         value: Option<Vec<String>>,
+    //     }
 
-        // /modules/nonces/state/nonces/items/{key}
-        let query = format!("/modules/nonces/state/nonces/items/{key}");
+    //     // /modules/accounts/state/credential-ids/items/{key}
+    //     let query = format!("/modules/accounts/state/credential-ids/items/{key}");
 
-        let response = self
-            .http_get(&query)
-            .await
-            .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-        let response: Schema<Data> = serde_json::from_slice(&response)?;
+    //     let response = self
+    //         .http_get(&query)
+    //         .await
+    //         .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
+    //     let response: Schema<Data> = serde_json::from_slice(&response)?;
 
-        let response = response.data.and_then(|d| d.value).ok_or_else(|| {
-            ChainCommunicationError::CustomError(String::from("Data contained None"))
-        })?;
-        Ok(response)
-    }
+    //     let response = response.data.clone().and_then(|d| d.value).ok_or_else(|| {
+    //         ChainCommunicationError::CustomError(String::from("Data contained None"))
+    //     })?;
+
+    //     if response.is_empty() {
+    //         Err(ChainCommunicationError::CustomError(String::from(
+    //             "Received empty list",
+    //         )))
+    //     } else {
+    //         Ok(response
+    //             .first()
+    //             .ok_or(ChainCommunicationError::CustomError(String::from(
+    //                 "Failed to get first item",
+    //             )))?
+    //             .clone())
+    //     }
+    // }
+
+    // pub async fn get_nonce(&self, key: &str) -> ChainResult<u32> {
+    //     #[derive(Clone, Debug, Deserialize)]
+    //     struct Data {
+    //         _key: Option<String>,
+    //         value: Option<u32>,
+    //     }
+
+    //     // /modules/nonces/state/nonces/items/{key}
+    //     let query = format!("/modules/nonces/state/nonces/items/{key}");
+
+    //     let response = self
+    //         .http_get(&query)
+    //         .await
+    //         .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
+    //     let response: Schema<Data> = serde_json::from_slice(&response)?;
+
+    //     let response = response.data.and_then(|d| d.value).ok_or_else(|| {
+    //         ChainCommunicationError::CustomError(String::from("Data contained None"))
+    //     })?;
+    //     Ok(response)
+    // }
 
     // @Provider
     pub async fn get_block_by_height(&self, height: u64) -> ChainResult<BlockInfo> {
@@ -306,7 +329,7 @@ impl SovereignRestClient {
             if let (Some(hash), Some(number)) = (response_data.hash, response_data.number) {
                 Ok(BlockInfo {
                     hash: H256::from_str(hash.as_str())?,
-                    timestamp: u64::default(),
+                    timestamp: u64::default(), // TODO: Use the slot timestamp once <https://github.com/Sovereign-Labs/sovereign-sdk-wip/pull/2661> merges
                     number,
                 })
             } else {
@@ -341,6 +364,7 @@ impl SovereignRestClient {
         let response: Schema<Data> = serde_json::from_slice(&response)?;
 
         let res = TxnInfo {
+            // TODO: This is all dummy info! What are we doing here?
             hash: H512::from_str(
                 response
                     .data
@@ -383,6 +407,22 @@ impl SovereignRestClient {
         })
     }
 
+    pub async fn get_slot(&self, slot: u64) -> ChainResult<Slot> {
+        let query = format!("/ledger/slots/{slot}?children=1");
+
+        let response = self
+            .http_get(&query)
+            .await
+            .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
+        let response: Schema<Slot> = serde_json::from_slice(&response)?;
+
+        response.data.ok_or_else(|| {
+            ChainCommunicationError::CustomError(
+                "Invalid response: missing batch field".to_string(),
+            )
+        })
+    }
+
     pub async fn get_tx_by_hash(&self, tx_id: String) -> ChainResult<Tx> {
         let query = format!("/ledger/txs/{tx_id}?children=1");
 
@@ -398,36 +438,38 @@ impl SovereignRestClient {
     }
 
     async fn get_compensated_rollup_height(&self, lag: u64) -> ChainResult<u64> {
-        let (_, latest_batch) = self.get_latest_slot().await?;
-        let batch = self
-            .get_batch(
-                latest_batch
-                    .ok_or(ChainCommunicationError::CustomError(String::from(
-                        "latest batch was None",
-                    )))?
-                    .into(),
-            )
-            .await?;
-        batch.slot_number.checked_sub(lag).ok_or_else(|| {
+        let current_slot = self.get_latest_slot().await?;
+        current_slot.checked_sub(lag).ok_or_else(|| {
             ChainCommunicationError::CustomError("lag was greater than rollup height".to_string())
         })
     }
 
-    // Return the latest slot, and the highest committed batch number in that slot.
-    pub async fn get_latest_slot(&self) -> ChainResult<(u32, Option<u32>)> {
-        #[derive(Clone, Debug, Deserialize)]
-        struct BatchRange {
-            // start: u32,
-            end: u32,
-        }
+    // Return the latest slot.
+    pub async fn get_latest_slot(&self) -> ChainResult<u64> {
         #[derive(Clone, Debug, Deserialize)]
         struct Data {
-            batch_range: BatchRange,
-            number: u32,
+            number: u64,
         }
-
         let query = "/ledger/slots/latest?children=0";
+        let response = self
+            .http_get(query)
+            .await
+            .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
+        let response: Schema<Data> = serde_json::from_slice(&response)?;
+        let data = response.data.ok_or(ChainCommunicationError::CustomError(
+            "Invalid response".to_string(),
+        ))?;
 
+        Ok(data.number)
+    }
+
+    // Return the finalized slot
+    pub async fn get_finalized_slot(&self) -> ChainResult<u64> {
+        #[derive(Clone, Debug, Deserialize)]
+        struct Data {
+            number: u64,
+        }
+        let query = "/ledger/slots/finalized?children=0";
         let response = self
             .http_get(query)
             .await
@@ -438,10 +480,7 @@ impl SovereignRestClient {
             "Invalid response".to_string(),
         ))?;
 
-        // bach_range.end is exclusive - it's one above the last committed batch number
-        let last_batch = data.batch_range.end.checked_sub(1);
-
-        Ok((data.number, last_batch))
+        Ok(data.number)
     }
 
     // @Provider - test working, need to test all variants
@@ -503,17 +542,12 @@ impl SovereignRestClient {
 
     // @Mailbox
     pub async fn get_count(&self, at_height: Option<u32>) -> ChainResult<u32> {
-        #[derive(Clone, Debug, Deserialize)]
-        struct Data {
-            value: Option<u32>,
-        }
-
         // /modules/mailbox/state/nonce
-        let query: String = match at_height {
-            Some(0) | None => "/modules/mailbox/state/nonce".to_owned(),
+        let query = match at_height {
+            Some(0) | None => "/modules/mailbox/nonce",
             Some(lag) => {
                 let rollup_height = self.get_compensated_rollup_height(u64::from(lag)).await?;
-                format!("/modules/mailbox/state/nonce?rollup_height={rollup_height}")
+                &format!("/modules/mailbox/nonce?rollup_height={rollup_height}")
             }
         };
 
@@ -521,12 +555,9 @@ impl SovereignRestClient {
             .http_get(&query)
             .await
             .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-        let response: Schema<Data> = serde_json::from_slice(&response)?;
+        let response: Schema<u32> = serde_json::from_slice(&response)?;
 
-        let response = response
-            .data
-            .and_then(|data| data.value)
-            .unwrap_or_default();
+        let response = response.data.unwrap_or_default();
 
         Ok(response)
     }
@@ -853,23 +884,21 @@ impl SovereignRestClient {
     }
 
     // @Merkle Tree Hook
-    pub async fn tree(&self, hook_id: &str, slot: Option<u32>) -> ChainResult<IncrementalMerkle> {
+    pub async fn tree(&self, slot: Option<u32>) -> ChainResult<IncrementalMerkle> {
         #[derive(Clone, Debug, Deserialize)]
         struct Data {
             count: Option<usize>,
             branch: Option<Vec<String>>,
         }
 
-        // /mailbox-hook-merkle-tree/{hook_id}/tree
+        // /modules/merkle-tree-hook/tree
         let query = match slot {
             Some(0) | None => {
-                format!("modules/mailbox-hook-merkle-tree/{hook_id}/tree")
+                format!("modules/merkle-tree-hook/tree")
             }
             Some(lag) => {
                 let rollup_height = self.get_compensated_rollup_height(u64::from(lag)).await?;
-                format!(
-                    "modules/mailbox-hook-merkle-tree/{hook_id}/tree?rollup_height={rollup_height}"
-                )
+                format!("modules/merkle-tree-hook/tree?rollup_height={rollup_height}")
             }
         };
 

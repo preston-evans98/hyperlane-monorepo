@@ -552,6 +552,29 @@ pub mod test {
     }
 
     #[test]
+    fn print_metadata_hex() {
+        let MultisigIsmTestData {
+            // message,
+            checkpoint,
+            // validators,
+            signatures,
+            ..
+        } = get_multisig_ism_test_data();
+
+        let data = MultisigIsmMessageIdMetadata {
+            origin_merkle_tree_hook: checkpoint.merkle_tree_hook_address,
+            merkle_root: checkpoint.root,
+            merkle_index: checkpoint.index,
+            validator_signatures: vec![
+                EcdsaSignature::from_bytes(&signatures[0]).unwrap(),
+                EcdsaSignature::from_bytes(&signatures[1]).unwrap(),
+            ],
+        }
+        .to_vec();
+
+        println!("data: {}", hex::encode(data));
+    }
+    #[test]
     fn test_verify() {
         let program_id = id();
 

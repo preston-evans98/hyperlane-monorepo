@@ -44,7 +44,7 @@ impl crate::indexer::SovIndexer<MerkleTreeInsertion> for SovereignMerkleTreeHook
     }
 
     async fn latest_sequence(&self) -> ChainResult<Option<u32>> {
-        let sequence = self.client().tree(&self.bech32_address, None).await?;
+        let sequence = self.client().tree(None).await?;
 
         match u32::try_from(sequence.count) {
             Ok(x) => Ok(Some(x)),
@@ -166,8 +166,7 @@ impl HyperlaneContract for SovereignMerkleTreeHook {
 impl MerkleTreeHook for SovereignMerkleTreeHook {
     async fn tree(&self, reorg_period: &ReorgPeriod) -> ChainResult<IncrementalMerkle> {
         let lag = Some(reorg_period.as_blocks()?);
-        let hook_id = to_bech32(self.address)?;
-        let tree = self.provider.client().tree(&hook_id, lag).await?;
+        let tree = self.provider.client().tree(lag).await?;
 
         Ok(tree)
     }
@@ -175,7 +174,7 @@ impl MerkleTreeHook for SovereignMerkleTreeHook {
     async fn count(&self, reorg_period: &ReorgPeriod) -> ChainResult<u32> {
         let lag = Some(reorg_period.as_blocks()?);
         let hook_id = to_bech32(self.address)?;
-        let tree = self.provider.client().tree(&hook_id, lag).await?;
+        let tree = self.provider.client().tree(lag).await?;
 
         match u32::try_from(tree.count) {
             Ok(x) => Ok(x),

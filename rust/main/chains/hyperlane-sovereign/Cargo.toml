@@ -5,7 +5,7 @@
 
 [dependencies]
  hyperlane-core = { path = "../../hyperlane-core", features = ["async"] }
- sov-universal-wallet = { path = "../../../../../sovereign-sdk-wip/crates/universal-wallet/schema", features = ["serde"] }
+ sov-universal-wallet = { path = "../../../../../sovereign-sdk-2/crates/universal-wallet/schema", features = ["serde"] }
 
  anyhow.workspace = true
  async-trait.workspace = true

@@ -1,4 +1,4 @@
-use hyperlane_core::config::OperationBatchConfig;
+pub use hyperlane_core::config::OperationBatchConfig;
 use url::Url;
 
 /// Sovereign connection configuration.
