@@ -7,6 +7,7 @@ use serde_json::{json, Value};
 use sov_universal_wallet::schema::{RollupRoots, Schema};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::time::{timeout_at, Instant};
+use tracing::warn;
 
 mod crypto;
 mod tx_state;
@@ -55,6 +56,7 @@ impl UniversalClient {
     }
 
     async fn wait_for_tx(&self, tx_hash: String) -> Result<()> {
+        warn!("Waiting for tx: {tx_hash}");
         let mut slot_subscription = self.subscribe_to_tx_status_updates(tx_hash).await?;
 
         let end_wait_time = Instant::now() + Duration::from_secs(300);
@@ -78,7 +80,7 @@ impl UniversalClient {
     }
 
     fn build_tx_json(&self, call_message: &Value) -> Value {
-        json!({
+        let tx = json!({
             "runtime_call": call_message,
             "generation": self.get_generation(),
             "details": {
@@ -87,7 +89,9 @@ impl UniversalClient {
                 "gas_limit": serde_json::Value::Null,
                 "chain_id": self.chain_id
             }
-        })
+        });
+        warn!("Created tx: {tx:?}");
+        tx
     }
 
     /// Query the Universale Wallet for the encoded transaction body.
@@ -146,6 +150,7 @@ impl UniversalClient {
         }
 
         let parsed_response: serde_json::Value = resp.json().await?;
+        warn!("Submitted tx response: {parsed_response:?}");
 
         let Some(id) = parsed_response
             .get("data")

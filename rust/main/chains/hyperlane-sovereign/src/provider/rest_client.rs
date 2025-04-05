@@ -13,6 +13,7 @@ use reqwest::{header::HeaderMap, Client, Response};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::{fmt::Debug, str::FromStr};
+use tracing::warn;
 use url::Url;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -163,6 +164,7 @@ impl HttpClient for SovereignRestClient {
             .await?;
 
         let result = self.parse_response(response).await?;
+        warn!("HTTP GET: {query}; {}", String::from_utf8_lossy(&result));
         Ok(result)
     }
 
@@ -182,6 +184,11 @@ impl HttpClient for SovereignRestClient {
             .await?;
 
         let result = self.parse_response(response).await?;
+
+        warn!(
+            "HTTP POST: {query}; {json:?}; {}",
+            String::from_utf8_lossy(&result)
+        );
         Ok(result)
     }
 
