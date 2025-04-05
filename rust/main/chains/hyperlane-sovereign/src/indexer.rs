@@ -28,7 +28,9 @@ where
         &self,
         range: RangeInclusive<u32>,
     ) -> ChainResult<Vec<(Indexed<T>, LogMeta)>> {
-        Ok(range
+        // wait for new slot to appear at ledger...
+        tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+        let logs = range
             .map(|slot_num| async move {
                 let slot = self.client().get_slot(slot_num.into()).await?;
                 let slot_hash = parse_hex_to_h256(&slot.hash, "invalid block hash")?;
@@ -43,11 +45,14 @@ where
             .try_flatten()
             .try_collect::<Vec<_>>()
             .await?
-            .concat())
+            .concat();
+
+        Ok(logs)
     }
 
     async fn get_finalized_block_number(&self) -> ChainResult<u32> {
-        let latest_slot = self.client().get_finalized_slot().await?;
+        // todo: should be finalized, but we need to query state at height first
+        let latest_slot = self.client().get_latest_slot().await?;
         Ok(latest_slot.try_into().expect("Slot number overflowed u32"))
     }
 
@@ -65,8 +70,11 @@ where
 
     // Default implementation of SequenceAwareIndexer<T>
     async fn latest_sequence_count_and_tip(&self) -> ChainResult<(Option<u32>, u32)> {
-        let latest_slot = self.client().get_latest_slot().await?;
+        // todo: workaround; it should be
+        // let finalized_slot = self.client().get_finalized_slot().await?;
+        // let sequence = self.latest_sequence(finalized_slot).await?;
         let sequence = self.latest_sequence().await?;
+        let latest_slot = self.client().get_latest_slot().await? + 1;
 
         Ok((
             sequence,

@@ -444,6 +444,7 @@ impl SovereignRestClient {
         })
     }
 
+    // todo: this seems wrong
     async fn get_compensated_rollup_height(&self, lag: u64) -> ChainResult<u64> {
         let current_slot = self.get_latest_slot().await?;
         current_slot.checked_sub(lag).ok_or_else(|| {
@@ -490,35 +491,11 @@ impl SovereignRestClient {
         Ok(data.number)
     }
 
-    // @Provider - test working, need to test all variants
-    pub async fn is_contract(&self, key: H256) -> ChainResult<bool> {
-        #[derive(Clone, Debug, Deserialize)]
-        struct Data {
-            key: Option<String>,
-            _value: Option<String>,
-        }
-
-        for module in [
-            "mailbox-hook-registry",
-            "mailbox-ism-registry",
-            "mailbox-recipient-registry",
-        ] {
-            let query = format!(
-                "/modules/{}/state/registry/items/{}",
-                module,
-                to_bech32(key)?
-            );
-
-            let response = self.http_get(&query).await.map_err(|e| {
-                ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}"))
-            })?;
-            let response: Schema<Data> = serde_json::from_slice(&response)?;
-
-            if response.data.and_then(|data| data.key).is_some() {
-                return Ok(true);
-            }
-        }
-        Ok(false)
+    /// Check if recipient is contract address. Sovereign design deviates from
+    /// hyperlane spec in that matter, as hyperlane impl is contract-less, so
+    /// we allow any destination here.
+    pub async fn is_contract(&self, _key: H256) -> ChainResult<bool> {
+        Ok(true)
     }
 
     // @Provider
@@ -550,6 +527,7 @@ impl SovereignRestClient {
     // @Mailbox
     pub async fn get_count(&self, at_height: Option<u32>) -> ChainResult<u32> {
         // /modules/mailbox/state/nonce
+        // todo: this seems wrong
         let query = match at_height {
             Some(0) | None => "/modules/mailbox/nonce",
             Some(lag) => {
@@ -559,7 +537,7 @@ impl SovereignRestClient {
         };
 
         let response = self
-            .http_get(&query)
+            .http_get(query)
             .await
             .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
         let response: Schema<u32> = serde_json::from_slice(&response)?;
@@ -622,20 +600,17 @@ impl SovereignRestClient {
             address: Option<String>,
         }
 
-        let recipient_bech32 = to_bech32(recipient_id)?;
-
-        let query = format!("/modules/mailbox-recipient-registry/{recipient_bech32}/ism");
+        let query = format!("/modules/mailbox/recipient-ism?address={recipient_id:?}");
 
         let response = self
             .http_get(&query)
             .await
             .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-        let response: Schema<Data> = serde_json::from_slice(&response)?;
+        let response: Schema<H256> = serde_json::from_slice(&response)?;
 
-        let addr_bech32 = response.data.and_then(|d| d.address).ok_or_else(|| {
+        response.data.ok_or_else(|| {
             ChainCommunicationError::CustomError(String::from("Data contained None"))
-        })?;
-        from_bech32(&addr_bech32)
+        })
     }
 
     // @Mailbox - test working
@@ -905,10 +880,9 @@ impl SovereignRestClient {
         }
 
         // /modules/merkle-tree-hook/tree
+        // todo: this seems wrong
         let query = match slot {
-            Some(0) | None => {
-                format!("modules/merkle-tree-hook/tree")
-            }
+            Some(0) | None => "modules/merkle-tree-hook/tree".into(),
             Some(lag) => {
                 let rollup_height = self.get_compensated_rollup_height(u64::from(lag)).await?;
                 format!("modules/merkle-tree-hook/tree?rollup_height={rollup_height}")
@@ -961,6 +935,7 @@ impl SovereignRestClient {
                 format!("modules/mailbox-hook-merkle-tree/{hook_id}/checkpoint")
             }
             Some(lag) => {
+                // todo: this seems wrong
                 let rollup_height = self.get_compensated_rollup_height(u64::from(lag)).await?;
                 format!("modules/mailbox-hook-merkle-tree/{hook_id}/checkpoint?rollup_height={rollup_height}")
             }
@@ -1166,7 +1141,7 @@ mod test {
             H256::from_str("000000000e0a2a203f9eaeb092e74d1d7bb03aa3bb03b06eee292753772e7054")
                 .unwrap();
         let res = try_h256_to_string(input);
-        assert_eq!(true, res.is_err())
+        assert!(res.is_err())
     }
 
     #[test]
