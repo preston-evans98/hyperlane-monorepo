@@ -165,15 +165,15 @@ impl Mailbox for SovereignMailbox {
         Ok(delivered)
     }
 
+    /// For now, there's no default ism in sov
+    /// todo: revisit if it isn't needed
     async fn default_ism(&self) -> ChainResult<H256> {
-        // let ism = self.provider.client().default_ism().await?;
-
         Ok(H256::default())
     }
 
     /// In sovereign, ISM's don't live in their own addresses
     /// so we just return the recipient address, to be later used
-    /// in queries for its ISM
+    /// in further queries for its ISM
     async fn recipient_ism(&self, recipient: H256) -> ChainResult<H256> {
         Ok(recipient)
     }
