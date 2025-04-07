@@ -595,11 +595,6 @@ impl SovereignRestClient {
 
     // @Mailbox
     pub async fn recipient_ism(&self, recipient_id: H256) -> ChainResult<H256> {
-        #[derive(Clone, Debug, Deserialize)]
-        struct Data {
-            address: Option<String>,
-        }
-
         let query = format!("/modules/mailbox/recipient-ism?address={recipient_id:?}");
 
         let response = self
