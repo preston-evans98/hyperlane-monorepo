@@ -221,9 +221,9 @@ impl HttpClient for SovereignRestClient {
 
 impl SovereignRestClient {
     /// Create a new Rest client for the Sovereign Hyperlane chain.
-    pub async fn new(conf: &ConnectionConf, domain: u32) -> ChainResult<Self> {
+    pub async fn new(conf: &ConnectionConf) -> ChainResult<Self> {
         let universal_wallet_client =
-            utils::get_universal_client(conf.url.as_str(), domain).await?;
+            utils::get_universal_client(conf.url.as_str(), conf.chain_id).await?;
         Ok(SovereignRestClient {
             url: conf.url.clone(),
             client: Client::new(),
@@ -234,11 +234,11 @@ impl SovereignRestClient {
     /// Create a new Rest client for the Sovereign Hyperlane chain.
     pub async fn new_with_key(
         conf: &ConnectionConf,
-        domain: u32,
+        chain_id: u64,
         key_bytes: [u8; 32],
     ) -> ChainResult<Self> {
         let universal_wallet_client =
-            utils::get_universal_client_with_key(conf.url.as_str(), domain, key_bytes).await?;
+            utils::get_universal_client_with_key(conf.url.as_str(), chain_id, key_bytes).await?;
         Ok(SovereignRestClient {
             url: conf.url.clone(),
             client: Client::new(),

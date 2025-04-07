@@ -23,7 +23,7 @@ impl SovereignProvider {
         conf: &ConnectionConf,
         signer: Option<Signer>,
     ) -> ChainResult<Self> {
-        let client = rest_client::SovereignRestClient::new(conf, domain.id()).await?;
+        let client = rest_client::SovereignRestClient::new(conf).await?;
 
         Ok(Self {
             domain,
