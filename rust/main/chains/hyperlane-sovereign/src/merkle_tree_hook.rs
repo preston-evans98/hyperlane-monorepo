@@ -18,7 +18,6 @@ use std::str::FromStr;
 #[derive(Debug, Clone)]
 pub struct SovereignMerkleTreeHookIndexer {
     provider: Box<SovereignProvider>,
-    bech32_address: String,
 }
 
 impl SovereignMerkleTreeHookIndexer {
@@ -30,7 +29,6 @@ impl SovereignMerkleTreeHookIndexer {
         let provider = SovereignProvider::new(locator.domain.clone(), &conf, None).await?;
         Ok(SovereignMerkleTreeHookIndexer {
             provider: Box::new(provider),
-            bech32_address: to_bech32(locator.address)?,
         })
     }
 }
@@ -173,7 +171,6 @@ impl MerkleTreeHook for SovereignMerkleTreeHook {
 
     async fn count(&self, reorg_period: &ReorgPeriod) -> ChainResult<u32> {
         let lag = Some(reorg_period.as_blocks()?);
-        let hook_id = to_bech32(self.address)?;
         let tree = self.provider.client().tree(lag).await?;
 
         match u32::try_from(tree.count) {
