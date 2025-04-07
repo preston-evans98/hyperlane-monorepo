@@ -4912,6 +4912,7 @@ dependencies = [
  "hex 0.4.3",
  "hyperlane-core",
  "k256 0.13.4",
+ "num-traits",
  "reqwest",
  "serde",
  "serde_json",

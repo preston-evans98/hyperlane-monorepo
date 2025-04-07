@@ -8,6 +8,7 @@ use hyperlane_core::{
     RawHyperlaneMessage, SignedType, TxCostEstimate, TxOutcome, TxnInfo, TxnReceiptInfo, H160,
     H256, H512, U256,
 };
+use num_traits::FromPrimitive;
 use reqwest::StatusCode;
 use reqwest::{header::HeaderMap, Client, Response};
 use serde::Deserialize;
@@ -593,21 +594,6 @@ impl SovereignRestClient {
         from_bech32(&addr_bech32)
     }
 
-    // @Mailbox
-    pub async fn recipient_ism(&self, recipient_id: H256) -> ChainResult<H256> {
-        let query = format!("/modules/mailbox/recipient-ism?address={recipient_id:?}");
-
-        let response = self
-            .http_get(&query)
-            .await
-            .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-        let response: Schema<H256> = serde_json::from_slice(&response)?;
-
-        response.data.ok_or_else(|| {
-            ChainCommunicationError::CustomError(String::from("Data contained None"))
-        })
-    }
-
     // @Mailbox - test working
     pub async fn process(
         &self,
@@ -837,33 +823,21 @@ impl SovereignRestClient {
     }
 
     // @ISM - test working
-    pub async fn module_type(&self, ism_id: H256) -> ChainResult<ModuleType> {
-        let query = format!(
-            "/modules/mailbox-ism-registry/{}/module_type/",
-            to_bech32(ism_id)?
-        );
+    pub async fn module_type(&self, recipient: H256) -> ChainResult<ModuleType> {
+        let query = format!("/modules/mailbox/recipient-ism?address={recipient:?}");
 
         let response = self
             .http_get(&query)
             .await
             .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-        let response: Schema<u32> = serde_json::from_slice(&response)?;
+        let response: Schema<u8> = serde_json::from_slice(&response)?;
+        let module_type = response
+            .data
+            .ok_or_else(|| ChainCommunicationError::CustomError("Data contained None".into()))?;
 
-        match response.data.ok_or_else(|| {
-            ChainCommunicationError::CustomError(String::from("Data contained None"))
-        })? {
-            0 => Ok(ModuleType::Unused),
-            1 => Ok(ModuleType::Routing),
-            2 => Ok(ModuleType::Aggregation),
-            3 => Ok(ModuleType::LegacyMultisig),
-            4 => Ok(ModuleType::MerkleRootMultisig),
-            5 => Ok(ModuleType::MessageIdMultisig),
-            6 => Ok(ModuleType::Null),
-            7 => Ok(ModuleType::CcipRead),
-            _ => Err(ChainCommunicationError::CustomError(String::from(
-                "Unknown ModuleType returned",
-            ))),
-        }
+        ModuleType::from_u8(module_type).ok_or_else(|| {
+            ChainCommunicationError::CustomError("Unknown ModuleType returned".into())
+        })
     }
 
     // @Merkle Tree Hook
@@ -971,8 +945,7 @@ impl SovereignRestClient {
             threshold: Option<u8>,
         }
 
-        let ism_id = self.recipient_ism(message.recipient).await?;
-        let ism_id = to_bech32(ism_id)?;
+        let ism_id = message.recipient;
 
         let message = hex::encode(RawHyperlaneMessage::from(message));
         let message = format!("0x{message}");
