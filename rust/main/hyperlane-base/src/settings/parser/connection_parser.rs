@@ -496,6 +496,27 @@ fn parse_transaction_submitter_config(
     }
 }
 
+pub fn build_sovereign_connection_conf(
+    rpcs: &[Url],
+    chain: &ValueParser,
+    operation_batch: OperationBatchConfig,
+    err: &mut ConfigParsingError,
+) -> Option<ChainConnectionConf> {
+    let url = rpcs.first()?;
+    let Some(chain_id) = chain.chain(err).get_key("chainId").parse_u64().end() else {
+        err.push(&chain.cwp + "chain_id", eyre!("Missing chain id for chain"));
+        return None;
+    };
+
+    Some(ChainConnectionConf::Sovereign(
+        h_sovereign::ConnectionConf {
+            url: url.clone(),
+            chain_id,
+            operation_batch,
+        },
+    ))
+}
+
 pub fn build_connection_conf(
     domain_protocol: HyperlaneDomainProtocol,
     rpcs: &[Url],
@@ -526,11 +547,8 @@ pub fn build_connection_conf(
         HyperlaneDomainProtocol::CosmosNative => {
             build_cosmos_native_connection_conf(rpcs, chain, err, operation_batch)
         }
-        HyperlaneDomainProtocol::Sovereign => rpcs.iter().next().map(|url| {
-            ChainConnectionConf::Sovereign(h_sovereign::ConnectionConf {
-                url: url.clone(),
-                operation_batch,
-            })
-        }),
+        HyperlaneDomainProtocol::Sovereign => {
+            build_sovereign_connection_conf(rpcs, chain, operation_batch, err)
+        }
     }
 }

@@ -5558,6 +5558,7 @@ dependencies = [
  "hex 0.4.3",
  "hyperlane-core",
  "k256 0.13.4",
+ "num-traits",
  "reqwest",
  "serde",
  "serde_json",
@@ -9908,6 +9909,7 @@ dependencies = [
 [[package]]
 name = "sov-universal-wallet"
 version = "0.1.0"
+source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip?branch=nightly#887ac63e62896b017170a5b6ff78625da02ba953"
 dependencies = [
  "arrayvec",
  "bech32 0.11.0",
@@ -9918,6 +9920,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "sha2 0.10.8",
  "thiserror",
 ]
 
