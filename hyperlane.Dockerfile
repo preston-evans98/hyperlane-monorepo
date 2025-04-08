@@ -24,11 +24,47 @@ RUN chmod +x /usr/bin/anvil
 
 # RELAYER + VALIDATOR
 
-COPY . /hyperlane-monorepo
 WORKDIR /hyperlane-monorepo
+
+# HYPERLANE CLI
+
+# copy only needed stuff to not cause rebuilds by changing rust sources
+COPY *.json *.yaml *.yml .*.yml *.mjs .*rc *.lock ./
+COPY .yarn ./.yarn
+COPY typescript ./typescript
+COPY solidity ./solidity
+
+ENV NVM_DIR=/usr/local/nvm
+ENV NVM_VERSION=0.39.7
+ENV NODE_VERSION=20
+
+RUN mkdir -p "$NVM_DIR" && \
+  curl "https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh" | bash && \
+  . "$NVM_DIR/nvm.sh" && \
+  nvm install "$NODE_VERSION" && \
+  nvm alias default "$NODE_VERSION" && \
+  nvm use default && \
+  npm install -g yarn && \
+  cd typescript && \
+  yarn install && \
+  yarn build
+
+RUN <<EOF cat > /usr/bin/hyperlane
+#!/bin/bash
+yarn --cwd /hyperlane-monorepo/typescript/cli hyperlane "\$@"
+EOF
+RUN chmod +x /usr/bin/hyperlane
+
+# Relayer + Validator
+
+# Required for VERGEN_GIT_SHA to be populated
+COPY .git .git
+COPY rust ./rust
 
 # the dependency on sovereign sdk is git based, so we need to pass the
 # authorized ssh key into the container
+# NOTE: this contract generation in fuel is wacky and sometimes fails
+# if you experience build errors due to that, remove cache mounts for one build
 RUN mkdir -p /root/.ssh && ssh-keyscan github.com >> /root/.ssh/known_hosts
 RUN --mount=type=ssh \
     --mount=type=cache,target=/hyperlane-monorepo/rust/main/target \
@@ -36,28 +72,5 @@ RUN --mount=type=ssh \
     --mount=type=cache,target=/usr/local/cargo/git/db \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
   cd rust/main && \
-  cargo build --release --bin relayer --bin validator && \
+  cargo build --features sov-sdk-testing --release --bin relayer --bin validator && \
   cp target/release/relayer target/release/relayer /usr/bin
-
-# HYPERLANE CLI
-
-# ENV NVM_DIR=/usr/local/nvm
-# ENV NVM_VERSION=0.39.7
-# ENV NODE_VERSION=20
-
-# RUN mkdir -p "$NVM_DIR" && \
-#   curl "https://raw.githubusercontent.com/creationix/nvm/v$NVM_VERSION/install.sh" | bash && \
-#   . "$NVM_DIR/nvm.sh" && \
-#   nvm install "$NODE_VERSION" && \
-#   nvm alias default "$NODE_VERSION" && \
-#   nvm use default && \
-#   npm install -g yarn && \
-#   cd typescript && \
-#   yarn install && \
-#   yarn build
-
-# RUN <<EOF cat > /usr/bin/hyperlane
-# #!/bin/bash
-# yarn --cwd /hyperlane-monorepo/typescript/cli hyperlane "\$@"
-# EOF
-# RUN chmod +x /usr/bin/hyperlane
