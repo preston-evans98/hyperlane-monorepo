@@ -143,6 +143,7 @@ pub struct Slot {
     pub hash: String,
     pub batches: Vec<Batch>,
 }
+
 trait HttpClient {
     async fn http_get(&self, query: &str) -> Result<Bytes, reqwest::Error>;
     async fn http_post(&self, query: &str, json: &Value) -> Result<Bytes, reqwest::Error>;
