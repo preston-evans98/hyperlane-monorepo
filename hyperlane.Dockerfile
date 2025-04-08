@@ -13,20 +13,16 @@ RUN apt-get update && \
 # ANVIL
 
 RUN curl -L https://foundry.paradigm.xyz | bash
-
 RUN ~/.foundry/bin/foundryup
-
 RUN <<EOF cat > /usr/bin/anvil
 #!/bin/bash
 ~/.foundry/bin/anvil | tee /anvil.log
 EOF
 RUN chmod +x /usr/bin/anvil
 
-# RELAYER + VALIDATOR
+# HYPERLANE CLI
 
 WORKDIR /hyperlane-monorepo
-
-# HYPERLANE CLI
 
 # copy only needed stuff to not cause rebuilds by changing rust sources
 COPY *.json *.yaml *.yml .*.yml *.mjs .*rc *.lock ./
@@ -55,7 +51,7 @@ yarn --cwd /hyperlane-monorepo/typescript/cli hyperlane "\$@"
 EOF
 RUN chmod +x /usr/bin/hyperlane
 
-# Relayer + Validator
+# RELAYER + VALIDATOR
 
 # Required for VERGEN_GIT_SHA to be populated
 COPY .git .git

@@ -246,62 +246,6 @@ impl SovereignRestClient {
         })
     }
 
-    // pub async fn get_values_from_key(&self, key: &str) -> ChainResult<String> {
-    //     #[derive(Clone, Debug, Deserialize)]
-    //     struct Data {
-    //         _key: Option<String>,
-    //         value: Option<Vec<String>>,
-    //     }
-
-    //     // /modules/accounts/state/credential-ids/items/{key}
-    //     let query = format!("/modules/accounts/state/credential-ids/items/{key}");
-
-    //     let response = self
-    //         .http_get(&query)
-    //         .await
-    //         .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-    //     let response: Schema<Data> = serde_json::from_slice(&response)?;
-
-    //     let response = response.data.clone().and_then(|d| d.value).ok_or_else(|| {
-    //         ChainCommunicationError::CustomError(String::from("Data contained None"))
-    //     })?;
-
-    //     if response.is_empty() {
-    //         Err(ChainCommunicationError::CustomError(String::from(
-    //             "Received empty list",
-    //         )))
-    //     } else {
-    //         Ok(response
-    //             .first()
-    //             .ok_or(ChainCommunicationError::CustomError(String::from(
-    //                 "Failed to get first item",
-    //             )))?
-    //             .clone())
-    //     }
-    // }
-
-    // pub async fn get_nonce(&self, key: &str) -> ChainResult<u32> {
-    //     #[derive(Clone, Debug, Deserialize)]
-    //     struct Data {
-    //         _key: Option<String>,
-    //         value: Option<u32>,
-    //     }
-
-    //     // /modules/nonces/state/nonces/items/{key}
-    //     let query = format!("/modules/nonces/state/nonces/items/{key}");
-
-    //     let response = self
-    //         .http_get(&query)
-    //         .await
-    //         .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Get Error: {e}")))?;
-    //     let response: Schema<Data> = serde_json::from_slice(&response)?;
-
-    //     let response = response.data.and_then(|d| d.value).ok_or_else(|| {
-    //         ChainCommunicationError::CustomError(String::from("Data contained None"))
-    //     })?;
-    //     Ok(response)
-    // }
-
     // @Provider
     pub async fn get_block_by_height(&self, height: u64) -> ChainResult<BlockInfo> {
         #[derive(Clone, Debug, Deserialize)]
@@ -490,13 +434,6 @@ impl SovereignRestClient {
         ))?;
 
         Ok(data.number)
-    }
-
-    /// Check if recipient is contract address. Sovereign design deviates from
-    /// hyperlane spec in that matter, as hyperlane impl is contract-less, so
-    /// we allow any destination here.
-    pub async fn is_contract(&self, _key: H256) -> ChainResult<bool> {
-        Ok(true)
     }
 
     // @Provider

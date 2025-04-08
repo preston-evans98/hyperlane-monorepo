@@ -60,11 +60,14 @@ impl HyperlaneProvider for SovereignProvider {
         Ok(txn)
     }
 
-    async fn is_contract(&self, address: &H256) -> ChainResult<bool> {
-        let is_contract = self.client.is_contract(*address).await?;
-        Ok(is_contract)
+    /// Check if recipient is contract address. Sovereign design deviates from
+    /// hyperlane spec in that matter, as hyperlane impl is contract-less, so
+    /// we allow any destination here.
+    async fn is_contract(&self, _address: &H256) -> ChainResult<bool> {
+        Ok(true)
     }
 
+    // todo: what is this doing?
     async fn get_balance(&self, address: String) -> ChainResult<U256> {
         let token_id = "token_1nyl0e0yweragfsatygt24zmd8jrr2vqtvdfptzjhxkguz2xxx3vs0y07u7";
         let balance = self.client.get_balance(token_id, address.as_str())?;
