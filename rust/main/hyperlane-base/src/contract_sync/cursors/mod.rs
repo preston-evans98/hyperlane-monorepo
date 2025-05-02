@@ -1,7 +1,6 @@
 use hyperlane_core::{
     Delivery, HyperlaneDomainProtocol, HyperlaneMessage, InterchainGasPayment, MerkleTreeInsertion,
 };
-use tracing::info;
 
 pub(crate) mod sequence_aware;
 pub(crate) use sequence_aware::ForwardBackwardSequenceAwareSyncCursor;
@@ -40,10 +39,7 @@ impl Indexable for HyperlaneMessage {
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::SequenceAware,
             HyperlaneDomainProtocol::CosmosNative => CursorType::SequenceAware,
-            HyperlaneDomainProtocol::Sovereign => {
-                info!("indexing_cursor(HyperlaneMessage domain: HyperlaneDomainProtocol)");
-                CursorType::SequenceAware
-            }
+            HyperlaneDomainProtocol::Sovereign => CursorType::SequenceAware,
         }
     }
 
@@ -65,10 +61,7 @@ impl Indexable for InterchainGasPayment {
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::RateLimited,
             HyperlaneDomainProtocol::CosmosNative => CursorType::RateLimited,
-            HyperlaneDomainProtocol::Sovereign => {
-                info!("indexing_cursor(InterchainGasPayment domain: HyperlaneDomainProtocol)");
-                CursorType::RateLimited
-            }
+            HyperlaneDomainProtocol::Sovereign => CursorType::RateLimited,
         }
     }
 
@@ -85,10 +78,7 @@ impl Indexable for MerkleTreeInsertion {
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::SequenceAware,
             HyperlaneDomainProtocol::CosmosNative => CursorType::SequenceAware,
-            HyperlaneDomainProtocol::Sovereign => {
-                info!("indexing_cursor(MerkleTreeInsertion domain: HyperlaneDomainProtocol)");
-                CursorType::SequenceAware
-            }
+            HyperlaneDomainProtocol::Sovereign => CursorType::SequenceAware,
         }
     }
 
@@ -105,10 +95,7 @@ impl Indexable for Delivery {
             HyperlaneDomainProtocol::Sealevel => CursorType::SequenceAware,
             HyperlaneDomainProtocol::Cosmos => CursorType::RateLimited,
             HyperlaneDomainProtocol::CosmosNative => CursorType::RateLimited,
-            HyperlaneDomainProtocol::Sovereign => {
-                info!("indexing_cursor(Delivery domain: HyperlaneDomainProtocol)");
-                todo!()
-            }
+            HyperlaneDomainProtocol::Sovereign => todo!(),
         }
     }
 

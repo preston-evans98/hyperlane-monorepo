@@ -568,7 +568,9 @@ impl ChainConf {
                 )?);
                 Ok(indexer as Box<dyn SequenceAwareIndexer<H256>>)
             }
-            ChainConnectionConf::Sovereign(_conf) => todo!(),
+            ChainConnectionConf::Sovereign(_conf) => {
+                Err(eyre!("Sovereign does not support delivery indexer yet")).context(ctx)
+            }
         }
         .context(ctx)
     }
@@ -1035,7 +1037,9 @@ impl ChainConf {
             ChainConnectionConf::CosmosNative(_) => {
                 Err(eyre!("Cosmos Native does not support aggregation ISM yet")).context(ctx)
             }
-            ChainConnectionConf::Sovereign(_conf) => todo!(),
+            ChainConnectionConf::Sovereign(_conf) => {
+                Err(eyre!("Sovereign does not support aggregation ISM yet")).context(ctx)
+            }
         }
         .context(ctx)
     }
@@ -1067,7 +1071,9 @@ impl ChainConf {
             ChainConnectionConf::CosmosNative(_) => {
                 Err(eyre!("Cosmos Native does not support CCIP read ISM yet")).context(ctx)
             }
-            ChainConnectionConf::Sovereign(_conf) => todo!(),
+            ChainConnectionConf::Sovereign(_conf) => {
+                Err(eyre!("Sovereign does not support CCIP read ISM yet")).context(ctx)
+            }
         }
         .context(ctx)
     }
