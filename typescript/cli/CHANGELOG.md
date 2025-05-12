@@ -1,5 +1,21 @@
 # @hyperlane-xyz/cli
 
+## 8.6.0
+
+### Minor Changes
+
+- d2bc2cfe: Update CLI package.json to be able to export functions
+
+### Patch Changes
+
+- Updated dependencies [407d8200]
+- Updated dependencies [ac984a17]
+- Updated dependencies [276d7ce4]
+- Updated dependencies [ba50e62f]
+- Updated dependencies [77946bb1]
+  - @hyperlane-xyz/sdk@8.6.0
+  - @hyperlane-xyz/utils@8.6.0
+
 ## 8.5.0
 
 ### Patch Changes
