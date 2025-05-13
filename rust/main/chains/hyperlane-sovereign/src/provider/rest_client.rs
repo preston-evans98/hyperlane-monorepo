@@ -118,7 +118,6 @@ impl SovereignRestClient {
             .await?;
 
         let result = self.parse_response(response).await?;
-        warn!("HTTP GET: {query}; {}", String::from_utf8_lossy(&result));
         Ok(result)
     }
 
@@ -138,11 +137,6 @@ impl SovereignRestClient {
             .await?;
 
         let result = self.parse_response(response).await?;
-
-        warn!(
-            "HTTP POST: {query}; {json:?}; {}",
-            String::from_utf8_lossy(&result)
-        );
         Ok(result)
     }
 

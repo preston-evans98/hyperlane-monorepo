@@ -193,6 +193,6 @@ impl UniversalClient {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
-            .as_secs()
+            .as_millis().try_into().unwrap()
     }
 }
