@@ -360,7 +360,18 @@ impl SovereignRestClient {
 
         #[derive(Clone, Debug, Deserialize)]
         struct ApplyTxResult {
+            receipt: Receipt,
             transaction_consumption: TransactionConsumption,
+        }
+
+        #[derive(Clone, Debug, Deserialize)]
+        struct Receipt {
+            receipt: ReceiptInner,
+        }
+
+        #[derive(Clone, Debug, Deserialize)]
+        struct ReceiptInner {
+            outcome: String,
         }
 
         #[derive(Clone, Debug, Deserialize)]
@@ -379,6 +390,13 @@ impl SovereignRestClient {
             .await
             .map_err(|e| ChainCommunicationError::CustomError(format!("HTTP Error: {e}")))?;
         let response: Schema<Data> = serde_json::from_slice(&response)?;
+
+        let receipt = &response.data.apply_tx_result.receipt;
+        if receipt.receipt.outcome != "successful" {
+            return Err(ChainCommunicationError::CustomError(
+                "Transaction simulation reverted".into(),
+            ));
+        }
 
         let gas_price = FixedPointNumber::from(
             response
@@ -577,14 +595,12 @@ impl SovereignRestClient {
                 serde_json::from_slice(&response);
 
             if let Ok(response) = response {
-                res[i].push(String::new());
                 response
                     .data
                     .value
                     .into_iter()
-                    .enumerate()
-                    .for_each(|(j, storage_location)| {
-                        res[i][j] = storage_location;
+                    .for_each(|storage_location| {
+                        res[i].push(storage_location);
                     });
             }
         }
