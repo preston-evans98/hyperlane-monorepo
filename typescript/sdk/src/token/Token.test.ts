@@ -215,6 +215,7 @@ const STANDARD_TO_TOKEN: Record<TokenStandard, TokenArgs | null> = {
     symbol: 'TIA.n',
     name: 'TIA.n',
   },
+  // TODO: Test these
   [TokenStandard.CwHypSynthetic]: null,
 
   [TokenStandard.CosmNativeHypCollateral]: null,
@@ -224,6 +225,12 @@ const STANDARD_TO_TOKEN: Record<TokenStandard, TokenArgs | null> = {
   [TokenStandard.StarknetHypCollateral]: null,
   [TokenStandard.StarknetHypNative]: null,
   [TokenStandard.StarknetHypSynthetic]: null,
+  
+  [TokenStandard.SovBank]: null,
+  [TokenStandard.SovBankNative]: null,
+  [TokenStandard.SovHypNative]: null,
+  [TokenStandard.SovHypCollateral]: null,
+  [TokenStandard.SovHypSynthetic]: null,
 };
 
 const PROTOCOL_TO_ADDRESS_FOR_BALANCE_CHECK: Partial<

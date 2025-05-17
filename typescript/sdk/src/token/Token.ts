@@ -66,10 +66,14 @@ import {
   SealevelTokenAdapter,
 } from './adapters/SealevelTokenAdapter.js';
 import {
-  StarknetHypCollateralAdapter,
   StarknetHypNativeAdapter,
   StarknetHypSyntheticAdapter,
+  StarknetHypCollateralAdapter,
 } from './adapters/StarknetTokenAdapter.js';
+import { 
+  SovereignHypTokenAdapter,
+  SovereignTokenAdapter,
+} from './adapters/SovereignTokenAdapter.js';
 import { PROTOCOL_TO_DEFAULT_NATIVE_TOKEN } from './nativeTokenMetadata.js';
 
 // Declaring the interface in addition to class allows
@@ -154,6 +158,15 @@ export class Token implements IToken {
         {},
         addressOrDenom,
       );
+    } else if (standard === TokenStandard.SovBankNative) {
+      return new SovereignTokenAdapter(chainName, multiProvider, {
+        token:
+          'token_1nyl0e0yweragfsatygt24zmd8jrr2vqtvdfptzjhxkguz2xxx3vs0y07u7', //TODO: Don't hardcode this - add proper native token support once available on rollup node
+      });
+    } else if (standard === TokenStandard.SovBank) {
+      return new SovereignTokenAdapter(chainName, multiProvider, {
+        token: addressOrDenom,
+      });
     } else if (this.isHypToken()) {
       return this.getHypAdapter(multiProvider);
     } else if (this.isIbcToken()) {
@@ -312,6 +325,19 @@ export class Token implements IToken {
     } else if (standard === TokenStandard.StarknetHypCollateral) {
       return new StarknetHypCollateralAdapter(chainName, multiProvider, {
         warpRouter: addressOrDenom,
+      });
+    } else if (
+      standard === TokenStandard.SovHypNative ||
+      standard === TokenStandard.SovHypCollateral ||
+      standard === TokenStandard.SovHypSynthetic
+    ) {
+      assert(
+        collateralAddressOrDenom,
+        'collateralAddressOrDenom required for SovHypNativeAdapter',
+      );
+      return new SovereignHypTokenAdapter(chainName, multiProvider, {
+        token: collateralAddressOrDenom,
+        routeId: addressOrDenom,
       });
     } else {
       throw new Error(`No hyp adapter found for token standard: ${standard}`);

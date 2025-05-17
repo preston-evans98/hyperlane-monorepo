@@ -7943,6 +7943,7 @@ __metadata:
     "@safe-global/safe-deployments": "npm:1.37.23"
     "@solana/spl-token": "npm:^0.4.9"
     "@solana/web3.js": "npm:^1.95.4"
+    "@sovereign-sdk/web3": "npm:0.2.0"
     "@types/mocha": "npm:^10.0.1"
     "@types/node": "npm:^18.14.5"
     "@types/sinon": "npm:^17.0.1"
@@ -14696,6 +14697,68 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sovereign-sdk/client@npm:0.1.0-alpha.28":
+  version: 0.1.0-alpha.28
+  resolution: "@sovereign-sdk/client@npm:0.1.0-alpha.28"
+  dependencies:
+    "@types/node": "npm:^18.11.18"
+    "@types/node-fetch": "npm:^2.6.4"
+    abort-controller: "npm:^3.0.0"
+    agentkeepalive: "npm:^4.2.1"
+    form-data-encoder: "npm:1.7.2"
+    formdata-node: "npm:^4.3.2"
+    node-fetch: "npm:^2.6.7"
+  checksum: 10/32c62a3e235e0ab23fc37fb771c63be83721f578044fe42fee743812a66412a88e5b9d321d84e9b4970a420c49eddac60a34482f3b266a5a8ae147ece09c420a
+  languageName: node
+  linkType: hard
+
+"@sovereign-sdk/signers@npm:^0.0.3":
+  version: 0.0.3
+  resolution: "@sovereign-sdk/signers@npm:0.0.3"
+  dependencies:
+    "@sovereign-sdk/utils": "npm:^0.0.2"
+  peerDependencies:
+    biome: ^0.3.3
+    tsup: ^8.3.0
+    typescript: ^5.6.3
+  checksum: 10/b21e1f6a4020a3db82ffae43be558386dd90e2af58907de49d0339447e4a5a52740fdaf166ed0bb1aafccc58549d49b6da0a1c5564341816ea74f64b7c5a16be
+  languageName: node
+  linkType: hard
+
+"@sovereign-sdk/universal-wallet-wasm@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@sovereign-sdk/universal-wallet-wasm@npm:0.2.0"
+  peerDependencies:
+    typescript: ^5.0.0
+  checksum: 10/2c866b8050438b9dfb615c1100cbf340e21c7291c8c046ec40034ff9e61763e648a90ea458a338b93e2c4844493b8f691672be13c0a511f8e64e059e80b18e05
+  languageName: node
+  linkType: hard
+
+"@sovereign-sdk/utils@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@sovereign-sdk/utils@npm:0.0.2"
+  checksum: 10/07306782bcfdea4b319d43dfc79f134c98ff2f9b34f62d8602020c93728df9615c76ac7a92fe2d5005c7399d222deeaf2f3e260d7f869bda09f77641bf6af24e
+  languageName: node
+  linkType: hard
+
+"@sovereign-sdk/web3@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@sovereign-sdk/web3@npm:0.2.0"
+  dependencies:
+    "@sovereign-sdk/client": "npm:0.1.0-alpha.28"
+    "@sovereign-sdk/signers": "npm:^0.0.3"
+    "@sovereign-sdk/universal-wallet-wasm": "npm:^0.2.0"
+    "@sovereign-sdk/utils": "npm:^0.0.2"
+    isomorphic-ws: "npm:^5.0.0"
+    js-base64: "npm:^3.7.7"
+    partysocket: "npm:^1.1.3"
+    ws: "npm:^8.18.1"
+  peerDependencies:
+    typescript: ^5.0.0
+  checksum: 10/a5590729e4d484c1fb520df045cc2a26e4cbe8b03998f84317a4bdc99b560a618bb29c1a9924c946eb11300d536e0c515d766d10f133e3e62b1a0900bbafc714
+  languageName: node
+  linkType: hard
+
 "@stablelib/aead@npm:^1.0.1":
   version: 1.0.1
   resolution: "@stablelib/aead@npm:1.0.1"
@@ -16596,6 +16659,15 @@ __metadata:
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10/024e8a6fac679fb4ec41a53ffa986806f3ac49b6003c380e84afb088280b463112e056f2c4ad1db3e6e36a60be75a18c3af9903ddeeb483f470e9ea629bee6f2
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^18.11.18":
+  version: 18.19.100
+  resolution: "@types/node@npm:18.19.100"
+  dependencies:
+    undici-types: "npm:~5.26.4"
+  checksum: 10/85939f4610aa526dc2a07eceeaeb12d8c56a4b817e76d921f8a6b4bc285892f70dcdf102587dad6e8b0c6d9b7109c2da5a1666b9553c1015c9f7348952e03e35
   languageName: node
   linkType: hard
 
@@ -23910,6 +23982,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"event-target-polyfill@npm:^0.0.4":
+  version: 0.0.4
+  resolution: "event-target-polyfill@npm:0.0.4"
+  checksum: 10/465f7abfc7d4716365cae732f6940732b0c48315358b228df80d13c85d1b55f2ff8c02c6c98bd1d474fe9e21119d40ff4d907dffe8387ae89ee8a09608365bf9
+  languageName: node
+  linkType: hard
+
 "event-target-shim@npm:^5.0.0":
   version: 5.0.1
   resolution: "event-target-shim@npm:5.0.1"
@@ -24701,6 +24780,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"form-data-encoder@npm:1.7.2":
+  version: 1.7.2
+  resolution: "form-data-encoder@npm:1.7.2"
+  checksum: 10/227bf2cea083284411fd67472ccc22f5cb354ca92c00690e11ff5ed942d993c13ac99dea365046306200f8bd71e1a7858d2d99e236de694b806b1f374a4ee341
+  languageName: node
+  linkType: hard
+
 "form-data-encoder@npm:^2.1.2":
   version: 2.1.4
   resolution: "form-data-encoder@npm:2.1.4"
@@ -24738,6 +24824,16 @@ __metadata:
     combined-stream: "npm:^1.0.6"
     mime-types: "npm:^2.1.12"
   checksum: 10/1b6f3ccbf4540e535887b42218a2431a3f6cfdea320119c2affa2a7a374ad8fdd1e60166fc865181f45d49b1684c3e90e7b2190d3fe016692957afb9cf0d0d02
+  languageName: node
+  linkType: hard
+
+"formdata-node@npm:^4.3.2":
+  version: 4.4.1
+  resolution: "formdata-node@npm:4.4.1"
+  dependencies:
+    node-domexception: "npm:1.0.0"
+    web-streams-polyfill: "npm:4.0.0-beta.3"
+  checksum: 10/29622f75533107c1bbcbe31fda683e6a55859af7f48ec354a9800591ce7947ed84cd3ef2b2fcb812047a884f17a1bac75ce098ffc17e23402cd373e49c1cd335
   languageName: node
   linkType: hard
 
@@ -27478,6 +27574,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"isomorphic-ws@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "isomorphic-ws@npm:5.0.0"
+  peerDependencies:
+    ws: "*"
+  checksum: 10/e20eb2aee09ba96247465fda40c6d22c1153394c0144fa34fe6609f341af4c8c564f60ea3ba762335a7a9c306809349f9b863c8beedf2beea09b299834ad5398
+  languageName: node
+  linkType: hard
+
 "isows@npm:1.0.6":
   version: 1.0.6
   resolution: "isows@npm:1.0.6"
@@ -28127,7 +28232,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-base64@npm:^3.7.5":
+"js-base64@npm:^3.7.5, js-base64@npm:^3.7.7":
   version: 3.7.7
   resolution: "js-base64@npm:3.7.7"
   checksum: 10/185e34c536a6b1c4e1ad8bd96d25b49a9ea4e6803e259eaaaca95f1b392a0d590b2933c5ca8580c776f7279507944b81ff1faf889d84baa5e31f026e96d676a5
@@ -30471,6 +30576,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-domexception@npm:1.0.0":
+  version: 1.0.0
+  resolution: "node-domexception@npm:1.0.0"
+  checksum: 10/e332522f242348c511640c25a6fc7da4f30e09e580c70c6b13cb0be83c78c3e71c8d4665af2527e869fc96848924a4316ae7ec9014c091e2156f41739d4fa233
+  languageName: node
+  linkType: hard
+
 "node-emoji@npm:^1.10.0":
   version: 1.11.0
   resolution: "node-emoji@npm:1.11.0"
@@ -31491,6 +31603,15 @@ __metadata:
   version: 1.3.3
   resolution: "parseurl@npm:1.3.3"
   checksum: 10/407cee8e0a3a4c5cd472559bca8b6a45b82c124e9a4703302326e9ab60fc1081442ada4e02628efef1eb16197ddc7f8822f5a91fd7d7c86b51f530aedb17dfa2
+  languageName: node
+  linkType: hard
+
+"partysocket@npm:^1.1.3":
+  version: 1.1.4
+  resolution: "partysocket@npm:1.1.4"
+  dependencies:
+    event-target-polyfill: "npm:^0.0.4"
+  checksum: 10/9202439c81db2f240d206e7d18b4a498ddd0269af6c2d200ca1521827bff25af5581bedc66fb9fb3c295c968cdb0ff8b8e9a8c1bf89dfed45669b63755fca9e2
   languageName: node
   linkType: hard
 
@@ -38235,6 +38356,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"web-streams-polyfill@npm:4.0.0-beta.3":
+  version: 4.0.0-beta.3
+  resolution: "web-streams-polyfill@npm:4.0.0-beta.3"
+  checksum: 10/dcdef67de57d83008f9dc330662b65ba4497315555dd0e4e7bcacb132ffdf8a830eaab8f74ad40a4a44f542461f51223f406e2a446ece1cc29927859b1405853
+  languageName: node
+  linkType: hard
+
 "web3-bzz@npm:1.10.0":
   version: 1.10.0
   resolution: "web3-bzz@npm:1.10.0"
@@ -39153,6 +39281,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10/9c796b84ba80ffc2c2adcdfc9c8e9a219ba99caa435c9a8d45f9ac593bba325563b3f83edc5eb067cc6d21b9a6bf2c930adf76dd40af5f58a5ca6859e81858f0
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.18.1":
+  version: 8.18.2
+  resolution: "ws@npm:8.18.2"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10/018e04ec95561d88248d53a2eaf094b4ae131e9b062f2679e6e8a62f04649bc543448f1e038125225ac6bbb25f54c1e65d7a2cc9dbc1e28b43e5e6b7162ad88e
   languageName: node
   linkType: hard
 

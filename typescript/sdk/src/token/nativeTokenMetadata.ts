@@ -34,4 +34,9 @@ export const PROTOCOL_TO_DEFAULT_NATIVE_TOKEN: Record<
     name: 'Ether',
     symbol: 'ETH',
   },
+  [ProtocolType.Sovereign]: {
+    decimals: 9,
+    name: 'Sovereign',
+    symbol: 'SOV',
+  },
 };

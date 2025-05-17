@@ -1,6 +1,7 @@
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
 import { StargateClient } from '@cosmjs/stargate';
 import { Connection } from '@solana/web3.js';
+import { createStandardRollup } from '@sovereign-sdk/web3';
 import { providers } from 'ethers';
 import { RpcProvider as StarknetRpcProvider } from 'starknet';
 import { createPublicClient, http } from 'viem';
@@ -19,6 +20,7 @@ import {
   ProviderType,
   SolanaWeb3Provider,
   StarknetJsProvider,
+  SovereignProvider,
   TypedProvider,
   ViemProvider,
   ZKSyncProvider,
@@ -145,6 +147,32 @@ export function defaultZKSyncProviderBuilder(
   return { type: ProviderType.ZkSync, provider };
 }
 
+export function defaultSovereignProviderBuilder(
+  rpcUrls: RpcUrl[],
+  network: number | string,
+): SovereignProvider {
+  if (!rpcUrls.length) throw new Error('No RPC URLs provided');
+
+  const id = parseInt(network.toString(), 10);
+
+  // Instantiate the rollup client
+  const rollup = createStandardRollup({
+    url: rpcUrls[0].http,
+    context: {
+      defaultTxDetails: {
+        max_priority_fee_bips: 0,
+        max_fee: '100000000',
+        gas_limit: null,
+        chain_id: id, // Note: Must match the chain id in constants.toml
+      },
+    },
+  });
+  return {
+    type: ProviderType.Sovereign,
+    provider: rollup,
+  };
+}
+
 // Kept for backwards compatibility
 export function defaultProviderBuilder(
   rpcUrls: RpcUrl[],
@@ -174,6 +202,7 @@ export const defaultProviderBuilderMap: ProviderBuilderMap = {
   [ProviderType.CosmJsNative]: defaultCosmJsNativeProviderBuilder,
   [ProviderType.Starknet]: defaultStarknetJsProviderBuilder,
   [ProviderType.ZkSync]: defaultZKSyncProviderBuilder,
+  [ProviderType.Sovereign]: defaultSovereignProviderBuilder,
 };
 
 export const protocolToDefaultProviderBuilder: Record<
@@ -185,4 +214,5 @@ export const protocolToDefaultProviderBuilder: Record<
   [ProtocolType.Cosmos]: defaultCosmJsWasmProviderBuilder,
   [ProtocolType.CosmosNative]: defaultCosmJsNativeProviderBuilder,
   [ProtocolType.Starknet]: defaultStarknetJsProviderBuilder,
+  [ProtocolType.Sovereign]: defaultSovereignProviderBuilder,
 };
