@@ -25,7 +25,7 @@ export class SovereignCoreAdapter
     super(chainName, multiProvider, addresses);
   }
 
-  public async getProvider(): Promise<StandardRollup<any>> {
+  public getProvider(): Promise<StandardRollup<any>> {
     return this.multiProvider.getSovereignProvider(this.chainName);
   }
 
