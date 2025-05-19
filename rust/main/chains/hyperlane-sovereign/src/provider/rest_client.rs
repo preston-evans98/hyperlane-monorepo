@@ -15,7 +15,6 @@ use reqwest::{header::HeaderMap, Client, Response};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::fmt::Debug;
-use tracing::warn;
 use url::Url;
 
 #[derive(Clone, Debug, Deserialize)]
