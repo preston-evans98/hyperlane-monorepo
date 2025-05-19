@@ -100,6 +100,7 @@ type ProtocolTypesMapping = {
     provider: StarknetJsProvider;
     contract: StarknetJsContract;
     receipt: StarknetJsTransactionReceipt;
+  };
   [ProtocolType.Sovereign]: {
     transaction: SovereignTransaction;
     provider: SovereignProvider;

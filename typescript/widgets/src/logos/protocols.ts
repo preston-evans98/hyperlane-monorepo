@@ -6,7 +6,7 @@ import { CosmosLogo } from './Cosmos.js';
 import { EthereumLogo } from './Ethereum.js';
 import { SolanaLogo } from './Solana.js';
 import { StarknetLogo } from './Starknet.js';
-
+import { SovereignLogo } from './Sovereign.js';
 export const PROTOCOL_TO_LOGO: Record<
   ProtocolType,
   FC<Omit<SVGProps<SVGSVGElement>, 'ref'>>
@@ -16,4 +16,5 @@ export const PROTOCOL_TO_LOGO: Record<
   [ProtocolType.Cosmos]: CosmosLogo,
   [ProtocolType.CosmosNative]: CosmosLogo,
   [ProtocolType.Starknet]: StarknetLogo,
+  [ProtocolType.Sovereign]: SovereignLogo,
 };

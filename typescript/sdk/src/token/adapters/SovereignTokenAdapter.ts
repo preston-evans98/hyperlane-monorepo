@@ -153,8 +153,13 @@ export class SovereignTokenAdapter
   }
   async getMetadata(isNft?: boolean): Promise<TokenMetadata> {
     // TODO: Return actual metadata
-    return { decimals: 9, symbol: 'SPL', name: 'SPL Token', totalSupply: '' };
+    return { decimals: 9, symbol: 'SPL', name: 'SPL Token' };
   }
+
+  async isRevokeApprovalRequired(): Promise<boolean> {
+    return false;
+  }
+
   async getMinimumTransferAmount(recipient: Address): Promise<bigint> {
     return 0n;
   }
