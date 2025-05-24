@@ -134,7 +134,7 @@ export class WarpCore {
     destination: ChainNameOrId;
     sender?: Address;
   }): Promise<TokenAmount> {
-    this.logger.debug(`Fetching interchain transfer quote to ${destination}`);
+    console.log(`Fetching interchain transfer quote to ${destination}`);
     const { chainName: originName } = originToken;
     const destinationName = this.multiProvider.getChainName(destination);
 
@@ -145,19 +145,23 @@ export class WarpCore {
       (q) => q.origin === originName && q.destination === destinationName,
     );
     if (defaultQuote) {
+      console.log(`Default quote found: ${defaultQuote}`);
       gasAmount = BigInt(defaultQuote.amount.toString());
       gasAddressOrDenom = defaultQuote.addressOrDenom;
     } else {
+      console.log(`No default quote found. Getting IGP quote via the adapter`);
       // Otherwise, compute IGP quote via the adapter
       const hypAdapter = originToken.getHypAdapter(
         this.multiProvider,
         destinationName,
       );
       const destinationDomainId = this.multiProvider.getDomainId(destination);
+      console.log(`Getting remote transfer: ${destinationDomainId}`);
       const quote = await hypAdapter.quoteTransferRemoteGas(
         destinationDomainId,
         sender,
       );
+      console.log('Quote: ', quote);
       gasAmount = BigInt(quote.amount);
       gasAddressOrDenom = quote.addressOrDenom;
     }
@@ -170,11 +174,12 @@ export class WarpCore {
       );
     } else {
       const searchResult = this.findToken(originName, gasAddressOrDenom);
+      console.log(`Search result: ${searchResult}`);
       assert(searchResult, `Fee token ${gasAddressOrDenom} is unknown`);
       igpToken = searchResult;
     }
 
-    this.logger.debug(
+    console.log(
       `Quoted interchain transfer fee: ${gasAmount} ${igpToken.symbol}`,
     );
     return new TokenAmount(gasAmount, igpToken);
@@ -529,6 +534,9 @@ export class WarpCore {
       ) as EvmHypXERC20LockboxAdapter;
       destinationBalance = await adapter.getBridgedSupply();
     } else {
+      this.logger.debug(
+        `Getting balance for ${destinationToken.symbol} on ${destination}`,
+      );
       const adapter = destinationToken.getAdapter(this.multiProvider);
       destinationBalance = await adapter.getBalance(
         destinationToken.addressOrDenom,
@@ -591,14 +599,19 @@ export class WarpCore {
     sender: Address;
     senderPubKey?: HexString;
   }): Promise<Record<string, string> | null> {
+    console.log(
+      `Validating transfer of ${originTokenAmount.token.symbol} to ${destination}`,
+    );
     const chainError = this.validateChains(
       originTokenAmount.token.chainName,
       destination,
     );
     if (chainError) return chainError;
+    console.log(`Chain validation passed`);
 
     const recipientError = this.validateRecipient(recipient, destination);
     if (recipientError) return recipientError;
+    console.log(`Recipient validation passed`);
 
     const amountError = await this.validateAmount(
       originTokenAmount,
@@ -606,23 +619,23 @@ export class WarpCore {
       recipient,
     );
     if (amountError) return amountError;
-
+    console.log(`Amount validation passed`);
     const destinationRateLimitError = await this.validateDestinationRateLimit(
       originTokenAmount,
       destination,
     );
     if (destinationRateLimitError) return destinationRateLimitError;
-
+    console.log(`Destination rate limit validation passed`);
     const destinationCollateralError = await this.validateDestinationCollateral(
       originTokenAmount,
       destination,
     );
     if (destinationCollateralError) return destinationCollateralError;
-
+    console.log(`Destination collateral validation passed`);
     const originCollateralError =
       await this.validateOriginCollateral(originTokenAmount);
     if (originCollateralError) return originCollateralError;
-
+    console.log(`Origin collateral validation passed`);
     const balancesError = await this.validateTokenBalances(
       originTokenAmount,
       destination,
@@ -630,7 +643,7 @@ export class WarpCore {
       senderPubKey,
     );
     if (balancesError) return balancesError;
-
+    console.log(`Balances validation passed. Returning successful validation result`);
     return null;
   }
 
@@ -748,29 +761,34 @@ export class WarpCore {
     senderPubKey?: HexString,
   ): Promise<Record<string, string> | null> {
     const { token: originToken, amount } = originTokenAmount;
-
+    console.log(`Validating token balances for ${originToken.symbol}`);
     const { amount: senderBalance } = await originToken.getBalance(
       this.multiProvider,
       sender,
     );
+    console.log(`Sender balance: ${senderBalance}`);
     const senderBalanceAmount = originTokenAmount.token.amount(senderBalance);
+    console.log(`Sender balance amount: ${senderBalanceAmount}`);
 
     // Check 1: Check basic token balance
     if (amount > senderBalance) return { amount: 'Insufficient balance' };
 
     // Check 2: Ensure the balance can cover interchain fee
     // Slightly redundant with Check 4 but gives more specific error messages
+    console.log(`Getting interchain transfer fee for ${originToken.symbol} to ${destination}`);
     const interchainQuote = await this.getInterchainTransferFee({
       originToken,
       destination,
       sender,
     });
+    console.log(`Interchain quote: ${interchainQuote}`);  
     // Get balance of the IGP fee token, which may be different from the transfer token
     const interchainQuoteTokenBalance = originToken.isFungibleWith(
       interchainQuote.token,
     )
       ? senderBalanceAmount
       : await interchainQuote.token.getBalance(this.multiProvider, sender);
+    console.log(`Interchain quote token balance: ${interchainQuoteTokenBalance}`);
     if (interchainQuoteTokenBalance.amount < interchainQuote.amount) {
       return {
         amount: `Insufficient ${interchainQuote.token.symbol} for interchain gas`,
@@ -778,6 +796,7 @@ export class WarpCore {
     }
 
     // Check 3: Simulates the transfer by getting the local gas fee
+    console.log(`Getting local transfer fee for ${originToken.symbol} to ${destination}`);
     const localQuote = await this.getLocalTransferFeeAmount({
       originToken,
       destination,
@@ -785,10 +804,11 @@ export class WarpCore {
       senderPubKey,
       interchainFee: interchainQuote,
     });
-
+    console.log(`Local quote: ${localQuote}`);
     const feeEstimate = { interchainQuote, localQuote };
-
+    console.log(`Fee estimate: ${feeEstimate}`);
     // Check 4: Ensure balances can cover the COMBINED amount and fees
+    console.log(`Getting max transfer amount for ${originToken.symbol} to ${destination}`);
     const maxTransfer = await this.getMaxTransferAmount({
       balance: senderBalanceAmount,
       destination,
@@ -796,10 +816,12 @@ export class WarpCore {
       senderPubKey,
       feeEstimate,
     });
+    console.log(`Max transfer: ${maxTransfer}`);
     if (amount > maxTransfer.amount) {
+      console.log(`Insufficient balance for gas and transfer`);
       return { amount: 'Insufficient balance for gas and transfer' };
     }
-
+    console.log(`Returning successful token balances validation result`);
     return null;
   }
 
@@ -931,6 +953,7 @@ export class WarpCore {
     // This is a convenience so WarpConfigs don't need to include definitions for native tokens
     const chainMetadata = this.multiProvider.getChainMetadata(chainName);
     if (chainMetadata.nativeToken?.denom === addressOrDenom) {
+      console.log(`Found native token ${chainMetadata.nativeToken?.denom} for ${addressOrDenom}`);
       return Token.FromChainMetadataNativeToken(chainMetadata);
     }
 

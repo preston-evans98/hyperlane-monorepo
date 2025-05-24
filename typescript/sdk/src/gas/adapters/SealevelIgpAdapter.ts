@@ -60,7 +60,10 @@ export abstract class SealevelIgpProgramAdapter extends BaseSealevelAdapter {
     gasAmount: bigint,
     payerKey: PublicKey,
   ): Promise<bigint> {
+    console.log(`Quoting gas payment for ${destination}`);
+    console.log(`getting payment keys`);
     const paymentKeys = await this.getPaymentKeys();
+    console.log(`payment keys: ${paymentKeys}`);
     const keys = [
       // 0. `[executable]` The system program.
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
@@ -102,13 +105,14 @@ export abstract class SealevelIgpProgramAdapter extends BaseSealevelAdapter {
     const tx = new VersionedTransaction(message);
 
     const connection = this.getProvider();
+    console.log(`simulating transaction`);
     const simulationResponse = await connection.simulateTransaction(tx, {
       // ignore the recent blockhash we pass in, and have the node use its latest one
       replaceRecentBlockhash: true,
       // ignore signature verification
       sigVerify: false,
     });
-
+    console.log(`simulation response: ${simulationResponse}`);
     const base64Data = simulationResponse.value.returnData?.data?.[0];
     assert(
       base64Data,
@@ -166,6 +170,7 @@ export class SealevelIgpAdapter extends SealevelIgpProgramAdapter {
   }
 
   async getAccountInfo(): Promise<SealevelIgpData> {
+    console.log(`Getting account info from SealevelIgpAdapter`);
     const address = this.addresses.igp;
     const connection = this.getProvider();
 
@@ -245,6 +250,7 @@ export class SealevelOverheadIgpAdapter extends SealevelIgpProgramAdapter {
   }
 
   async getAccountInfo(): Promise<SealevelOverheadIgpData> {
+    console.log(`Getting account info from SealevelOverheadIgpAdapter`);
     const address = this.addresses.overheadIgp;
     const connection = this.getProvider();
 

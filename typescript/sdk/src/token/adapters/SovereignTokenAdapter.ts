@@ -141,10 +141,12 @@ export class SovereignTokenAdapter
     if (response['errors']) {
       return BigInt(0);
     }
-    let amount = response['data'] as Record<
+    let data = response['data'] as Record<
       string,
       unknown
-    >['amount'] as string;
+    >;
+    let amount = data['amount'] as string;
+    // Cannot convert `object` to amount
     return BigInt(amount);
   }
   async getTotalSupply(): Promise<bigint | undefined> {

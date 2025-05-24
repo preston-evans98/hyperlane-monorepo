@@ -292,7 +292,10 @@ export abstract class SealevelHypTokenAdapter
   async getTokenAccountData(): Promise<SealevelHyperlaneTokenData> {
     if (!this.cachedTokenAccountData) {
       const tokenPda = this.deriveHypTokenAccount();
+      console.log(`Getting token account data for ${tokenPda}`);
+      // cc @cem - this is the spot where the hang usually happens
       const accountInfo = await this.getProvider().getAccountInfo(tokenPda);
+      console.log(`Account info: ${accountInfo}`);
       if (!accountInfo)
         throw new Error(`No account info found for ${tokenPda}`);
       const wrappedData = deserializeUnchecked(
@@ -348,19 +351,25 @@ export abstract class SealevelHypTokenAdapter
     destination: Domain,
     sender?: Address,
   ): Promise<InterchainGasQuote> {
+    console.log(`Quoting transfer remote gas for ${destination}`);
     const tokenData = await this.getTokenAccountData();
+    console.log(`Token data: ${tokenData}`);
     const destinationGas = tokenData.destination_gas?.get(destination);
+    console.log(`Destination gas: ${destinationGas}`);
     if (isNullish(destinationGas)) {
       return { amount: 0n };
     }
 
+    console.log(`Getting IGP adapter`);
     const igp = this.getIgpAdapter(tokenData);
+    console.log(`Igp: ${igp}`);
     if (!igp) {
       return { amount: 0n };
     }
 
-    assert(sender, 'Sender required for Sealevel transfer remote gas quote');
 
+    assert(sender, 'Sender required for Sealevel transfer remote gas quote');
+    console.log(`Quoting gas payment`);
     return {
       amount: await igp.quoteGasPayment(
         destination,

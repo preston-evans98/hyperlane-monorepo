@@ -11,6 +11,7 @@ import {
 import { isNullish } from './typeof.js';
 import { Address, HexString, ProtocolType } from './types.js';
 import { assert } from './validation.js';
+import { bech32m } from 'bech32';
 
 const EVM_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const SEALEVEL_ADDRESS_REGEX = /^[a-zA-Z0-9]{36,44}$/;
@@ -131,6 +132,11 @@ export function isValidAddressCosmos(address: Address) {
   }
 }
 
+export function isValidAddressSovereign(address: Address) {
+  // TODO: implement bech32m address validation
+  return true;
+}
+
 export function isValidAddressStarknet(address: Address) {
   try {
     const isValid = address && validateAndParseAddress(address);
@@ -148,6 +154,7 @@ export function isValidAddress(address: Address, protocol?: ProtocolType) {
       [ProtocolType.Cosmos]: isValidAddressCosmos,
       [ProtocolType.CosmosNative]: isValidAddressCosmos,
       [ProtocolType.Starknet]: isValidAddressStarknet,
+      [ProtocolType.Sovereign]: isValidAddressSovereign,
     },
     address,
     false,
@@ -325,6 +332,14 @@ export function addressToBytesStarknet(address: Address): Uint8Array {
   return num.hexToBytes(normalizedAddress);
 }
 
+export function addressToBytesSovereign(address: Address): Uint8Array {
+  let data = bech32m.decode(address).words;
+  if (data.length != 28) {
+    throw new Error('Sovereign bech32m addresses must be exactly 28 bytes');
+  }
+  return new Uint8Array(data);
+}
+
 export function addressToBytes(
   address: Address,
   protocol?: ProtocolType,
@@ -336,6 +351,7 @@ export function addressToBytes(
       [ProtocolType.Cosmos]: addressToBytesCosmos,
       [ProtocolType.CosmosNative]: addressToBytesCosmos,
       [ProtocolType.Starknet]: addressToBytesStarknet,
+      [ProtocolType.Sovereign]: addressToBytesSovereign,
     },
     address,
     new Uint8Array(),
@@ -409,6 +425,17 @@ export function bytesToAddressStarknet(bytes: Uint8Array): Address {
   return addAddressPadding(hexString);
 }
 
+export function bytesToAddressSovereignBech32m(bytes: Uint8Array, prefix: string): Address {
+  if (bytes.length != 28) {
+    throw new Error('Sovereign bech32m addresses must be exactly 28 bytes');
+  }
+  return bech32m.encode(prefix, bytes);
+}
+
+export function bytesToAddressSovereignBase58(bytes: Uint8Array): Address {
+  return new PublicKey(bytes).toBase58(); // TODO: Maybe truncate to 28 bytes
+}
+
 export function bytesToProtocolAddress(
   bytes: Uint8Array,
   toProtocol: ProtocolType,
@@ -428,6 +455,12 @@ export function bytesToProtocolAddress(
     return bytesToAddressCosmos(bytes, prefix!);
   } else if (toProtocol === ProtocolType.Starknet) {
     return bytesToAddressStarknet(bytes);
+  } else if (toProtocol === ProtocolType.Sovereign) {
+    if (prefix) {
+      return bytesToAddressSovereignBech32m(bytes, prefix!);
+    } else {
+      return bytesToAddressSovereignBase58(bytes);
+    }
   } else {
     throw new Error(`Unsupported protocol for address ${toProtocol}`);
   }
