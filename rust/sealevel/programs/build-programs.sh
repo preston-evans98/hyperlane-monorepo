@@ -19,7 +19,7 @@ build_program () {
     PROGRAM_PATH=$1
     log "Building $PROGRAM_PATH"
     pushd $PROGRAM_PATH
-    cargo build-sbf
+    LD_LIBRARY_PATH=/usr/local/lib cargo build-sbf
     popd
 }
 
@@ -62,7 +62,11 @@ get_current_solana_cli_version () {
 set_solana_cli_version () {
     NEW_VERSION=$1
 
-    sh -c "$(curl -sSfL https://release.solana.com/v$NEW_VERSION/install)"
+    if [ $NEW_VERSION == $SOLANA_CLI_VERSION_FOR_BUILDING_PROGRAMS ]; then
+        ./install-solana-1.14.20.sh
+    else
+        sh -c "$(curl -sSfL https://release.anza.xyz/v$NEW_VERSION/install)"
+    fi
 }
 
 log () {

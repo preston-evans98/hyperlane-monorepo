@@ -169,6 +169,7 @@ pub enum KnownHyperlaneDomain {
     Sanko = 1996,
     Sei = 1329,
     SolanaMainnet = 1399811149,
+    SolanaTestnet = 1399811150,
     Taiko = 167000,
     Tangle = 5845,
     Treasure = 61166,
@@ -328,7 +329,7 @@ impl KnownHyperlaneDomain {
                 DegenChain, EclipseMainnet, Endurance, Ethereum, Fraxtal, FuseMainnet, Gnosis,
                 InEvm, Injective, Kroma, Linea, Lisk, Lukso, MantaPacific, Mantle, Merlin,
                 Metis, Mint, Mode, Moonbeam, Neutron, Optimism, Osmosis, Polygon, ProofOfPlay,
-                ReAl, Redstone, Sanko, Sei, SolanaMainnet, Taiko, Tangle, Treasure, Viction, Worldchain, Xai,
+                ReAl, Redstone, Sanko, Sei, SolanaMainnet, SolanaTestnet, Taiko, Tangle, Treasure, Viction, Worldchain, Xai,
                 Xlayer, Zeronetwork, Zetachain, Zircuit, Zklink, Zksync, ZoraMainnet,
             ],
             Testnet: [
@@ -363,7 +364,7 @@ impl KnownHyperlaneDomain {
 
             ],
             HyperlaneDomainProtocol::Fuel: [FuelTest1],
-            HyperlaneDomainProtocol::Sealevel: [EclipseMainnet, SolanaMainnet, SealevelTest1, SealevelTest2],
+            HyperlaneDomainProtocol::Sealevel: [EclipseMainnet, SolanaMainnet, SolanaTestnet, SealevelTest1, SealevelTest2],
             HyperlaneDomainProtocol::Cosmos: [
                 Injective, Neutron, Osmosis,
 
@@ -399,7 +400,7 @@ impl KnownHyperlaneDomain {
             HyperlaneDomainTechnicalStack::Other: [
                 Avalanche, BinanceSmartChain, Celo, EclipseMainnet, Endurance, Ethereum,
                 FuseMainnet, Gnosis, Injective, Linea, Lukso, Neutron, Osmosis, Polygon,
-                Sei, SolanaMainnet, Taiko, Viction, Zetachain,
+                Sei, SolanaMainnet, SolanaTestnet, Taiko, Viction, Zetachain,
 
                 // Local chains
                 CosmosTest99990, CosmosTest99991, FuelTest1, SealevelTest1, SealevelTest2, Test1,
