@@ -666,11 +666,11 @@ pub fn install_spl_token_cli() {
             "install",
             "spl-token-cli",
             "--git",
-            "https://github.com/hyperlane-xyz/solana-program-library",
+            "https://github.com/preston-evans98/solana-program-library",
             "--branch",
-            "dan/create-token-for-mint",
+            "preston/fix-spl",
             "--rev",
-            "ae4c8ac46",
+            "480ca26b08729895a5e19c9d092628c77ec730b8",
         ])
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
