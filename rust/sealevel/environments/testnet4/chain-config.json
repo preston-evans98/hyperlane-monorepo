@@ -1,32 +1,4 @@
 {
-  "sovstarter": {
-    "blockExplorers": [],
-    "blocks": {
-      "confirmations": 1,
-      "estimateBlockTime": 3,
-      "reorgPeriod": 0
-    },
-    "chainId": 4321,
-    "deployer": {
-      "name": "Sovereign Labs",
-      "url": "https://www.sovereign.xyz"
-    },
-    "displayName": "Sov Starter",
-    "domainId": 5555,
-    "isTestnet": true,
-    "name": "sov starter",
-    "nativeToken": {
-      "decimals": 9,
-      "name": "Sov",
-      "symbol": "SOV"
-    },
-    "protocol": "sovereign",
-    "rpcUrls": [
-      {
-        "http": "http://localhost:12346"
-      }
-    ]
-  },
   "abstracttestnet": {
     "blockExplorers": [
       {
